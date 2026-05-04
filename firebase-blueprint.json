@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "object" },
+        "lastActiveAt": { "type": "object" },
+        "subscriptionTier": { "type": "string", "enum": ["free", "sheng"] },
+        "subscriptionExpiresAt": { "type": "object" },
+        "totalReadings": { "type": "number" },
+        "firstReadingAt": { "type": "object" },
+        "lastReadingAt": { "type": "object" },
+        "localMigrationCompleted": { "type": "boolean" }
+      },
+      "required": ["email", "createdAt", "subscriptionTier"]
+    },
+    "Reading": {
+      "title": "Reading",
+      "description": "Individual divination record",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "hexagramName": { "type": "string" },
+        "hexagramNumber": { "type": "number" },
+        "changingLines": { "type": "array", "items": { "type": "number" } },
+        "report": { "type": "string" },
+        "coreReflection": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "sentiment": { "type": "string" },
+        "questionType": { "type": "string" },
+        "primaryTheme": { "type": "string" },
+        "createdAt": { "type": "object" },
+        "isStarred": { "type": "boolean" },
+        "userNote": { "type": "string" },
+        "dialogueCount": { "type": "number" },
+        "source": { "type": "string" }
+      },
+      "required": ["question", "hexagramName", "createdAt", "source"]
+    },
+    "InsightReport": {
+      "title": "Insight Report",
+      "description": "Historical insights generated for milestones",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "structuredData": { "type": "object" },
+        "relatedReadingIds": { "type": "array", "items": { "type": "string" } },
+        "isPaid": { "type": "boolean" },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["type", "title", "content", "isPaid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/users/{userId}/readings/{readingId}": {
+      "schema": "Reading",
+      "description": "Individual divination records"
+    },
+    "/users/{userId}/insightReports/{reportId}": {
+      "schema": "InsightReport",
+      "description": "Milestone based historical insights"
+    }
+  }
+}
