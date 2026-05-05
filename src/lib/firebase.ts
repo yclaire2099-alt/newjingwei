@@ -14,7 +14,15 @@ export const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+      console.warn("Login interface was closed or cancelled.");
+      return null;
+    }
+    if (error.code === 'auth/popup-blocked') {
+      alert("登录窗口被浏览器拦截。请允许弹出窗口，或点击浏览器地址栏右侧的拦截图标进行授权。");
+      return null;
+    }
     console.error("Login failed:", error);
     throw error;
   }

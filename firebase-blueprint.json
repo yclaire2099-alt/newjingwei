@@ -11,7 +11,9 @@
         "createdAt": { "type": "object" },
         "lastActiveAt": { "type": "object" },
         "subscriptionTier": { "type": "string", "enum": ["free", "sheng"] },
-        "subscriptionExpiresAt": { "type": "object" },
+        "subscriptionType": { "type": "string" },
+        "subscriptionExpiry": { "type": "number" },
+        "unlockedInsightsCount": { "type": "number" },
         "totalReadings": { "type": "number" },
         "firstReadingAt": { "type": "object" },
         "lastReadingAt": { "type": "object" },
@@ -56,6 +58,22 @@
         "createdAt": { "type": "object" }
       },
       "required": ["type", "title", "content", "isPaid", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Payment order record",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "paid", "failed", "cancelled"] },
+        "provider": { "type": "string" },
+        "createdAt": { "type": "object" },
+        "paidAt": { "type": "object" }
+      },
+      "required": ["productId", "amount", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -70,6 +88,10 @@
     "/users/{userId}/insightReports/{reportId}": {
       "schema": "InsightReport",
       "description": "Milestone based historical insights"
+    },
+    "/users/{userId}/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Payment order records"
     }
   }
 }

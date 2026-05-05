@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GoogleGenAI } from "@google/genai";
+import { chatDialogueAI } from "@/services/aiService";
 import { MessageCircle, Send, Loader2, X, Sparkles, User, Bot, History } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { db, auth, handleFirestoreError, OperationType } from "@/lib/firebase";
 import { doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+
+import { getMaxDialogueTurns } from "@/lib/entitlements";
 
 interface Message {
   role: "user" | "assistant";
@@ -18,9 +21,21 @@ interface DeepDialogueProps {
   question: string;
   interpretation: string;
   onClose: () => void;
+  direction?: string;
+  onSave?: () => void;
 }
 
-export const DeepDialogue: React.FC<DeepDialogueProps> = ({ divinationId, question, interpretation, onClose }) => {
+export const DeepDialogue: React.FC<DeepDialogueProps> = ({ 
+  divinationId, 
+  question, 
+  interpretation, 
+  onClose, 
+  direction,
+  onSave 
+}) => {
+  const { profile } = useAuth();
+  const maxRounds = getMaxDialogueTurns(profile);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,18 +45,13 @@ export const DeepDialogue: React.FC<DeepDialogueProps> = ({ divinationId, questi
 
   useEffect(() => {
     // Initial system message or greeting
+    const greetContent = direction 
+      ? `针对你的指引：“${direction}”，让我们深入看看这件事。`
+      : `你好。通过刚才的卦象，我们已经触碰到了你内心的一角。针对你的困惑：“${question}”，让我们开启一段深度的对话。`;
+
     const initialMessage: Message = {
       role: "assistant",
-      content: `你好。通过刚才的卦象，我们已经触碰到了你内心的一角。
-
-针对你的困惑：“${question}”，
-以及我们看到的现状、内心、阴影与视角。
-
-现在，让我们开启一段深度的对话（共8轮）。
-我将通过提问的方式，协助你更好地看见自己的叙事，发现不同视角的自己。
-
-**第一轮：**
-在刚才的解读中，哪一个“镜子”（现状、内心、阴影、视角）最让你感到意外或触动？为什么？`,
+      content: `${greetContent}\n\n**第一轮：**\n在刚才的解读中，哪一个“镜子”（现状、内心、阴影、视角）最让你感到意外或触动？为什么？`,
       timestamp: Date.now()
     };
     setMessages([initialMessage]);
@@ -74,7 +84,7 @@ export const DeepDialogue: React.FC<DeepDialogueProps> = ({ divinationId, questi
   };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading || round > 8) return;
+    if (!input.trim() || isLoading || round > maxRounds) return;
 
     const userMsg: Message = { role: "user", content: input, timestamp: Date.now() };
     const newMessages = [...messages, userMsg];
@@ -83,52 +93,18 @@ export const DeepDialogue: React.FC<DeepDialogueProps> = ({ divinationId, questi
     setIsLoading(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("GEMINI_API_KEY is not configured");
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      const modelId = "gemini-3.1-pro-preview";
-      
-      const systemInstruction = `你是一位深度心理咨询师与易经哲学引导者。
-      
-      当前对话背景：
-      - 用户的问题: "${question}"
-      - 初始卦象解读: "${interpretation}"
-      - 当前轮次: ${round}/8
-      
-      你的目标：
-      1. 协助用户看见自己的“叙事”（即他们是如何定义自己和处境的）。
-      2. 引导用户发现不同视角的自己（通过错卦、综卦的启发）。
-      3. 探索新的可能性转变。
-      
-      对话规则：
-      - 每次只提一个深刻的问题。
-      - 语气要优雅、克制、富有同理心。
-      - 严禁算命或玄学说教，侧重心理觉察。
-      - 如果是最后一轮（第8轮），请进行总结并给出一个充满希望的结语。
-      - 保持对话的连贯性，基于用户的回答进行追问。`;
-
-      const chat = ai.chats.create({
-        model: modelId,
-        config: {
-          systemInstruction,
-          tools: [{ googleSearch: {} }]
-        },
-        history: messages.map(m => ({
-          role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }]
-        }))
-      });
-
-      const response = await chat.sendMessage({
-        message: input
+      const data = await chatDialogueAI({
+        question,
+        interpretation,
+        messages: messages,
+        input,
+        round,
+        direction
       });
 
       const assistantMsg: Message = { 
         role: "assistant", 
-        content: response.text || "我正在深思，请稍后再试。", 
+        content: data.text || "我正在深思，请稍后再试。", 
         timestamp: Date.now() 
       };
       
@@ -172,7 +148,7 @@ export const DeepDialogue: React.FC<DeepDialogueProps> = ({ divinationId, questi
                     />
                   ))}
                 </div>
-                <span className="text-[10px] text-ink/30 font-serif uppercase tracking-widest">Round {round}/8</span>
+                <span className="text-[10px] text-ink/30 font-serif uppercase tracking-widest">Round {Math.min(round, maxRounds)}/{maxRounds}</span>
               </div>
             </div>
           </div>
@@ -230,6 +206,50 @@ export const DeepDialogue: React.FC<DeepDialogueProps> = ({ divinationId, questi
               </div>
             </div>
           )}
+          {round > maxRounds && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-10 bg-accent/5 border border-accent/10 rounded-[40px] text-center flex flex-col items-center gap-6"
+            >
+              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                <History size={24} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-xl font-serif text-ink leading-relaxed">
+                  这次照见可以先走到这里。
+                </p>
+                <p className="text-sm font-serif text-ink/40">
+                  如果你愿意继续深入，可以保存这次记录，或升级为「省」，让镜微陪你多走几步。
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-4">
+                <button 
+                  onClick={() => {
+                    if (onSave) onSave();
+                    onClose();
+                  }}
+                  className="px-8 py-3 rounded-full bg-ink text-bg font-serif text-sm font-bold tracking-widest hover:scale-105 transition-all"
+                >
+                  保存这次照见
+                </button>
+                <button 
+                  onClick={() => {
+                    window.location.href = "/pricing";
+                  }}
+                  className="px-8 py-3 rounded-full border border-accent/20 text-accent font-serif text-sm font-bold tracking-widest hover:bg-accent/5 transition-all"
+                >
+                  了解「省」
+                </button>
+                <button 
+                  onClick={onClose}
+                  className="px-8 py-3 rounded-full text-ink/40 font-serif text-sm hover:text-ink transition-all"
+                >
+                  回到报告
+                </button>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Input Area */}
@@ -237,8 +257,8 @@ export const DeepDialogue: React.FC<DeepDialogueProps> = ({ divinationId, questi
           <div className="relative group">
             <textarea
               rows={1}
-              placeholder={round > 8 ? "对话已圆满结束" : "在此输入你的感悟或回答..."}
-              disabled={isLoading || round > 8}
+              placeholder={round > maxRounds ? "对话已圆满结束" : "在此输入你的感悟或回答..."}
+              disabled={isLoading || round > maxRounds}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {

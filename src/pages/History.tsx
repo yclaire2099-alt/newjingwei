@@ -14,7 +14,8 @@ import {
   ChevronRight, 
   Clock,
   Sparkles,
-  BookOpen
+  BookOpen,
+  Gem
 } from "lucide-react";
 import { Link } from "wouter";
 import { HEXAGRAMS } from "@/lib/iching";
@@ -84,6 +85,12 @@ export const HistoryPage: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <Link href="/pricing">
+              <button className="px-5 py-2.5 rounded-full bg-accent/5 border border-accent/20 text-accent font-serif text-xs font-bold tracking-widest hover:bg-accent hover:text-white transition-all flex items-center gap-2">
+                <Gem size={14} />
+                <span>会员中心</span>
+              </button>
+            </Link>
             <button className="w-12 h-12 rounded-full border border-ink/5 flex items-center justify-center text-ink/20 hover:text-ink transition-all">
               <Search size={20} />
             </button>

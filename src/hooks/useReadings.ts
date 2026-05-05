@@ -12,7 +12,7 @@ import { useAuth } from "./useAuth";
 import { analyzeReadingAI, generateInsightAI } from "@/services/aiService";
 
 export const useReadings = () => {
-  const { user } = useAuth();
+  const { user, subscriptionTier } = useAuth();
   const [readings, setReadings] = useState<ReadingRecord[]>([]);
   const [insightReports, setInsightReports] = useState<InsightReport[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,7 +73,7 @@ export const useReadings = () => {
     const id = await saveReading(user.uid, {
       ...reading,
       ...analysis
-    }, false); // Default to free for now
+    }, subscriptionTier === "sheng"); 
     
     await fetchData();
     return id;
