@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { LoginDialog } from "@/components/Auth/LoginDialog";
 
 export const PricingPage: React.FC = () => {
   const { user, profile, subscriptionTier } = useAuth();
@@ -24,6 +25,7 @@ export const PricingPage: React.FC = () => {
   const [readings, setReadings] = useState<ReadingRecord[]>([]);
   const [isLoadingOrder, setIsLoadingOrder] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -33,7 +35,7 @@ export const PricingPage: React.FC = () => {
 
   const handlePurchase = async (productId: string) => {
     if (!user) {
-      toast.error("请先登录以开启镜微档案");
+      setIsLoginDialogOpen(true);
       return;
     }
 
@@ -249,6 +251,13 @@ export const PricingPage: React.FC = () => {
           ))}
         </section>
       </main>
+
+      <LoginDialog 
+        isOpen={isLoginDialogOpen} 
+        onClose={() => setIsLoginDialogOpen(false)} 
+        title="开启并同步你的档案"
+        description="登录后，即可开启专属于你的内省镜像。每一个发现都值得被记住。"
+      />
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { Sparkles, ChevronRight, History as HistoryIcon, User, LogIn, LogOut, Ar
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useReadings } from "@/hooks/useReadings";
+import { LoginDialog } from "@/components/Auth/LoginDialog";
 
 type AppState = "landing" | "divination" | "interpretation";
 
@@ -16,8 +17,9 @@ export const Home: React.FC = () => {
   const [state, setState] = useState<AppState>("landing");
   const [lines, setLines] = useState<LineType[]>([]);
   const [question, setQuestion] = useState("");
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { user, login, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { addReading } = useReadings();
 
   const handleComplete = (newLines: LineType[]) => {
@@ -88,7 +90,7 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <button 
-              onClick={() => login()}
+              onClick={() => setIsLoginDialogOpen(true)}
               className="px-5 py-2 rounded-full border border-ink/10 text-xs text-ink/60 hover:bg-ink/5 transition-colors font-serif tracking-widest uppercase flex items-center gap-2"
             >
               <LogIn size={14} />
@@ -256,6 +258,13 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      <LoginDialog 
+        isOpen={isLoginDialogOpen} 
+        onClose={() => setIsLoginDialogOpen(false)} 
+        title="开启并同步你的档案"
+        description="登录后，你的每一次内省足迹都将安全同步至云端，永不迷失。"
+      />
     </div>
   );
 };

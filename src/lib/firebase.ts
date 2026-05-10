@@ -28,6 +28,35 @@ export const loginWithGoogle = async () => {
   }
 };
 
+export const sendOTP = async (email: string) => {
+  const response = await fetch("/api/auth/send-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to send OTP");
+  }
+  return response.json();
+};
+
+export const verifyOTP = async (email: string, otp: string) => {
+  const response = await fetch("/api/auth/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Verification failed");
+  }
+  const { customToken } = await response.json();
+  const { signInWithCustomToken } = await import("firebase/auth");
+  const result = await signInWithCustomToken(auth, customToken);
+  return result.user;
+};
+
 export const logout = async () => {
   try {
     await signOut(auth);

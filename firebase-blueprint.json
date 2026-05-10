@@ -74,9 +74,24 @@
         "paidAt": { "type": "object" }
       },
       "required": ["productId", "amount", "status", "createdAt"]
+    },
+    "OTPVerification": {
+      "title": "OTP Verification",
+      "description": "Temporary storage for email verification codes",
+      "type": "object",
+      "properties": {
+        "otp": { "type": "string" },
+        "expiresAt": { "type": "number" },
+        "attempts": { "type": "number" }
+      },
+      "required": ["otp", "expiresAt", "attempts"]
     }
   },
   "firestore": {
+    "/otp_verifications/{email}": {
+      "schema": "OTPVerification",
+      "description": "Temporary OTP codes"
+    },
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles"

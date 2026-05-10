@@ -154,13 +154,13 @@ export const initializeUserProfile = async (user: any) => {
     const userDoc = await getDoc(userRef);
     if (!userDoc.exists()) {
       await setDoc(userRef, {
-        displayName: user.displayName,
+        displayName: user.displayName || user.email?.split('@')[0] || "访客",
         email: user.email,
-        photoURL: user.photoURL,
+        photoURL: user.photoURL || null,
         createdAt: Timestamp.now(),
         lastActiveAt: Timestamp.now(),
         subscriptionTier: "free",
-        subscriptionExpiresAt: null,
+        subscriptionExpiry: null,
         totalReadings: 0,
         firstReadingAt: null,
         lastReadingAt: null,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "firebase/auth";
-import { subscribeToAuthChanges, login, logoutUser } from "@/services/authService";
+import { subscribeToAuthChanges, login, logoutUser, sendOTP, verifyOTP } from "@/services/authService";
 import { initializeUserProfile } from "@/services/readingService";
 import { db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -71,6 +71,18 @@ export const useAuth = () => {
     }
   };
 
+  const handleSendOTP = async (email: string) => {
+    return await sendOTP(email);
+  };
+
+  const handleVerifyOTP = async (email: string, otp: string) => {
+    const loggedInUser = await verifyOTP(email, otp);
+    if (loggedInUser) {
+      await initializeUserProfile(loggedInUser);
+    }
+    return loggedInUser;
+  };
+
   const handleLogout = async () => {
     await logoutUser();
   };
@@ -80,7 +92,9 @@ export const useAuth = () => {
     profile,
     subscriptionTier: profile?.subscriptionTier || "free",
     loading, 
-    login: handleLogin, 
+    login: handleLogin,
+    sendOTP: handleSendOTP,
+    verifyOTP: handleVerifyOTP,
     logout: handleLogout 
   };
 };
