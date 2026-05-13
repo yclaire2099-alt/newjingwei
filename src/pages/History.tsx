@@ -15,6 +15,7 @@ import {
   Clock,
   Sparkles,
   BookOpen,
+  Calendar,
   Gem
 } from "lucide-react";
 import { Link } from "wouter";
@@ -45,6 +46,16 @@ export const HistoryPage: React.FC = () => {
       icon: Sparkles, 
       action: () => setActiveInsightId(insightReports.find(r => r.type === "third_hint")?.id || null) 
     };
+    
+    // Monthly Report Entry Point (Always show for demo)
+    return {
+      title: "2026年5月·月度镜像报告",
+      desc: "已生成。通过你本月的 4 次照见，镜微看见了这些内在模式。",
+      icon: Calendar,
+      isMonthlyReport: true,
+      link: "/monthly-report"
+    };
+
     if (count >= 5 && count < 10) return { 
       title: "你的 5 次内省卡已生成", 
       desc: "这是你近期的内在成长轨迹。", 
@@ -165,12 +176,17 @@ export const HistoryPage: React.FC = () => {
                 <div className="flex flex-col gap-16">
                   {/* Summary Section / Milestone Trigger */}
                   <div 
-                    onClick={milestone.action}
                     className={cn(
                       "p-12 border border-ink/5 rounded-[56px] bg-white/60 relative overflow-hidden group transition-all",
-                      milestone.action ? "cursor-pointer hover:bg-white hover:border-accent/20 hover:shadow-2xl" : ""
+                      (milestone.action || milestone.link) ? "cursor-pointer hover:bg-white hover:border-accent/20 hover:shadow-2xl" : ""
                     )}
                   >
+                    {milestone.link ? (
+                      <Link href={milestone.link} className="absolute inset-0 z-20" />
+                    ) : (
+                      milestone.action && <button onClick={milestone.action} className="absolute inset-0 z-20" />
+                    )}
+
                     <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:bg-accent/10 transition-all duration-1000" />
                     
                     <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">

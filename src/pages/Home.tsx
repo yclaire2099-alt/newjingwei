@@ -55,6 +55,15 @@ export const Home: React.FC = () => {
         </div>
         
         <nav className="flex items-center gap-8">
+          <Link href="/monthly-report">
+            <button 
+              className="text-xs font-serif tracking-widest uppercase flex items-center gap-2 text-accent hover:text-accent/80 transition-colors"
+            >
+              <Sparkles size={14} />
+              <span>月度报告</span>
+            </button>
+          </Link>
+          
           <Link href="/history">
             <button 
               className="text-xs font-serif tracking-widest uppercase flex items-center gap-2 text-ink/40 hover:text-ink/80 transition-colors"
